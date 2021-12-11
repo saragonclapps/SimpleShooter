@@ -7,7 +7,8 @@
 .vs/
 
 # Initial material from training
-Content/AssetPacks/
+Content/AssetPacks/ModularSciFiSeason1
+Content/AssetPacks/ParagonWraith
 
 # Visual Studio
 *.VC.db
