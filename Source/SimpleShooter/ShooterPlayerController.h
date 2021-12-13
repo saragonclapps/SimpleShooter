@@ -23,8 +23,7 @@ public:
 	virtual void SetupInputComponent() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Game Status")
-	void OnPauseEvent();
-
+		void OnPauseEvent();
 private:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class UUserWidget> WinScreenClass;

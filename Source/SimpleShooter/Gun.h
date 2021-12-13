@@ -24,6 +24,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Shooter Character")
+		void AddAmmon(float Amount);
 private:
 	UPROPERTY(VisibleAnywhere)
 		USceneComponent* Root;
@@ -56,6 +58,8 @@ private:
 		float CurrentBulletsAmmunition;
 
 	bool GunTrace(FHitResult& Hit, FVector& ShotDirection);
+
+	FCollisionQueryParams ParamsIgnore;
 
 	AController* GetOwnerController() const;
 };

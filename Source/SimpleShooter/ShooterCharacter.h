@@ -33,11 +33,38 @@ public:
 
 	void Shoot();
 
+	FTimerHandle FireRateTimerHandle;
+	
+	float StuneTimmer = 2.0f;
+
+	bool bIsStune;
+
+	UFUNCTION(BlueprintCallable, Category = "Shooter Character")
+		void AddHealth(float Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Shooter Character")
+		void AddShield(float Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Shooter Character")
+		AGun* GetCurrentGun();
+
 	UFUNCTION(BlueprintPure)
 		bool IsDead() const;
 
 	UFUNCTION(BlueprintPure)
+		bool IsFullHealth() const;
+
+	UFUNCTION(BlueprintPure)
+		bool IsFullShield() const;
+
+	UFUNCTION(BlueprintPure)
+		bool IsAmmonFull() const;
+
+	UFUNCTION(BlueprintPure)
 		float GetHealthPercentage() const;
+
+	UFUNCTION(BlueprintPure)
+		float GetShieldPercentage() const;
 
 	UFUNCTION(BlueprintPure)
 		float GetCurrentWeaponAmmunitionPercentage() const;
@@ -59,6 +86,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 		float Health;
+
+	UPROPERTY(EditDefaultsOnly)
+		float MaxShield = 100;
+
+	UPROPERTY(VisibleAnywhere)
+		float Shield;
 
 	// Input movement
 	void MoveForward(float AxisValue);

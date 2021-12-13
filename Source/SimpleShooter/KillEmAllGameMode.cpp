@@ -35,13 +35,6 @@ void AKillEmAllGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason) {
 	Super::EndPlay(EndPlayReason);
 }
 
-void AKillEmAllGameMode::SetGamePaused(bool bIsPaused) {
-	APlayerController* const MyPlayer = Cast<APlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-	if (MyPlayer != NULL) {
-		MyPlayer->SetPause(bIsPaused);
-	}
-}
-
 
 void AKillEmAllGameMode::EndGame(bool bIsPlayerWinner) {
 	for (AController* Controller : TActorRange<AController>(GetWorld())) {

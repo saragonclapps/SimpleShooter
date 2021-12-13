@@ -13,97 +13,153 @@
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() {
-  // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-  PrimaryActorTick.bCanEverTick = true;
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
 void AShooterCharacter::BeginPlay() {
-  Super::BeginPlay();
+	Super::BeginPlay();
 
-  Health = MaxHealth;
+	Health = MaxHealth;
+	Shield = MaxShield;
 
-  Gun = GetWorld()->SpawnActor<AGun>(GunClass);
-  GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
-  Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
-  Gun->SetOwner(this);
+	Gun = GetWorld()->SpawnActor<AGun>(GunClass);
+	GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
+	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
+	Gun->SetOwner(this);
 }
 
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime) {
-  Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 }
 
 // Called to bind functionality to input
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
-  Super::SetupPlayerInputComponent(PlayerInputComponent);
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-  PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
-  PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight);
-  PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &APawn::AddControllerPitchInput);
-  PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &APawn::AddControllerYawInput);
-  PlayerInputComponent->BindAxis(TEXT("LookUpRate"), this, &AShooterCharacter::LookUpRate);
-  PlayerInputComponent->BindAxis(TEXT("LookRightRate"), this, &AShooterCharacter::LookRightRate);
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AShooterCharacter::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AShooterCharacter::MoveRight);
+	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis(TEXT("LookUpRate"), this, &AShooterCharacter::LookUpRate);
+	PlayerInputComponent->BindAxis(TEXT("LookRightRate"), this, &AShooterCharacter::LookRightRate);
 
-  PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
-  PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::Shoot);
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction(TEXT("Fire"), EInputEvent::IE_Pressed, this, &AShooterCharacter::Shoot);
 }
 
 float AShooterCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) {
-  float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-  // Apply damage without going down more than 0 and override the value to DamageToApply
-  DamageToApply = FMath::Min(Health, DamageToApply);
-  Health -= DamageToApply;
-   UE_LOG(LogTemp, Warning, TEXT("The character life is %f and apply damage %f"), Health, DamageToApply);
+	UE_LOG(LogTemp, Warning, TEXT("PRE: Damage to apply %f and status shield: %f, health: %f"),DamageToApply, Shield, Health);
 
-  if (IsDead()) {
-    ASimpleShooterGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ASimpleShooterGameModeBase>();
+	if (Shield > 0) {
+		DamageToApply = DamageToApply / 2;
+		UE_LOG(LogTemp, Warning, TEXT("PRE: Damage to apply SHIELD %f"), DamageToApply);
+		Health -= DamageToApply;
+		Shield -= DamageToApply;
+		if (Shield < 0) {
+			Shield = 0;
+		}
+	}
+	else {
+		DamageToApply = FMath::Min(Health, DamageToApply);
+		Health -= DamageToApply;
+		UE_LOG(LogTemp, Warning, TEXT("The character life is %f and apply damage %f "), Health, DamageToApply);
+	}
 
-    if (GameMode != nullptr) {
-      GameMode->PawnKilled(this);
-    }
 
-    DetachFromControllerPendingDestroy();
-    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-  }
+	if (IsDead()) {
+		ASimpleShooterGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ASimpleShooterGameModeBase>();
 
-  return DamageToApply;
+		if (GameMode != nullptr) {
+			GameMode->PawnKilled(this);
+		}
+
+		DetachFromControllerPendingDestroy();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	return DamageToApply;
 }
 
-bool AShooterCharacter::IsDead() const {
-  return Health == 0;
+void AShooterCharacter::AddHealth(float Amount) {
+	if (IsFullHealth()) {
+		return;
+	}
+
+	Health += Amount;
+	if (Health > MaxHealth) {
+		Health = MaxHealth;
+	}
+}
+
+void AShooterCharacter::AddShield(float Amount) {
+	if (IsFullShield()) {
+		return;
+	}
+
+	Shield += Amount;
+	if (Shield > MaxShield) {
+		Shield = MaxShield;
+	}
+}
+
+bool AShooterCharacter::IsFullShield() const {
+	return Shield >= MaxShield;
+}
+
+float AShooterCharacter::GetShieldPercentage() const {
+	return Shield / MaxShield;
+}
+
+bool AShooterCharacter::IsFullHealth() const {
+	return Health >= MaxHealth;
 }
 
 float AShooterCharacter::GetHealthPercentage() const {
-    return Health / MaxHealth;
+	return Health / MaxHealth;
+}
+
+bool AShooterCharacter::IsDead() const {
+	return Health == 0;
+}
+
+AGun* AShooterCharacter::GetCurrentGun() {
+	return Gun;
+}
+
+bool AShooterCharacter::IsAmmonFull() const {
+	return Gun->GetCurrentBulletsAmmunition() == Gun->GetMaxBulletsAmmunition();
 }
 
 float AShooterCharacter::GetCurrentWeaponAmmunitionPercentage() const {
-    return Gun->GetCurrentBulletsAmmunition() / Gun->GetMaxBulletsAmmunition();
+	return Gun->GetCurrentBulletsAmmunition() / Gun->GetMaxBulletsAmmunition();
 }
 
 float AShooterCharacter::GetCurrentWeaponAmmunition() const {
-   return Gun->GetCurrentBulletsAmmunition();
+	return Gun->GetCurrentBulletsAmmunition();
 }
 
 void AShooterCharacter::Shoot() {
-  if (Gun == nullptr) return;
-  Gun->PullTrigger();
+	if (Gun == nullptr) return;
+	Gun->PullTrigger();
 }
 
 void AShooterCharacter::MoveForward(float AxisValue) {
-  AddMovementInput(GetActorForwardVector() * AxisValue);
+	AddMovementInput(GetActorForwardVector() * AxisValue);
 }
 
 void AShooterCharacter::MoveRight(float AxisValue) {
-  AddMovementInput(GetActorRightVector() * AxisValue);
+	AddMovementInput(GetActorRightVector() * AxisValue);
 }
 
 void AShooterCharacter::LookUpRate(float AxisValue) {
-  AddControllerPitchInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }
 
 void AShooterCharacter::LookRightRate(float AxisValue) {
-  AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
+	AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
 }

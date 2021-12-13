@@ -17,7 +17,6 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void PawnKilled(APawn* PawnKilled) override;
-	virtual void SetGamePaused(bool bIsPaused);
 private:
 	void EndGame(bool bIsPlayerWinner);
 };

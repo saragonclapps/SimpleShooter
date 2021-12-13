@@ -9,7 +9,6 @@
 
 void AShooterPlayerController::BeginPlay() {
 	Super::BeginPlay();
-	//AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
 
 	Hud = CreateWidget(this, HudScreenClass);
 	if (Hud != nullptr) {
