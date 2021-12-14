@@ -21,6 +21,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	float CurrentMovementCalc(float RateValue);
+
+	FVector CurrentMovementCalc(FVector RateValue);
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -33,10 +36,10 @@ public:
 
 	void Shoot();
 
-	FTimerHandle FireRateTimerHandle;
+	FTimerHandle StuneTimerHandler;
 	
-	float StuneTimmer = 2.0f;
-
+	float StuneTimer = 2.0f;
+	void IsInStuneTime();
 	bool bIsStune;
 
 	UFUNCTION(BlueprintCallable, Category = "Shooter Character")
@@ -50,6 +53,11 @@ public:
 
 	UFUNCTION(BlueprintPure)
 		bool IsDead() const;
+
+	UFUNCTION(BlueprintPure)
+		float GetCurrentHealth() const;
+
+	void SetCurrentHealth(float value);
 
 	UFUNCTION(BlueprintPure)
 		bool IsFullHealth() const;

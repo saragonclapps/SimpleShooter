@@ -10,6 +10,7 @@
 #include "SimpleShooterGameModeBase.h"
 #include "Gun.h"
 #include "Engine/Engine.h"
+#include "TimerManager.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter() {
@@ -28,6 +29,11 @@ void AShooterCharacter::BeginPlay() {
 	GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
 	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
 	Gun->SetOwner(this);
+}
+
+void AShooterCharacter::IsInStuneTime() {
+	UE_LOG(LogTemp, Error, TEXT("Stune character is disable"));;
+	bIsStune = false;
 }
 
 // Called every frame
@@ -53,7 +59,15 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 float AShooterCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) {
 	float DamageToApply = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	UE_LOG(LogTemp, Warning, TEXT("PRE: Damage to apply %f and status shield: %f, health: %f"),DamageToApply, Shield, Health);
+	UE_LOG(LogTemp, Warning, TEXT("PRE: Damage to apply %f and status shield: %f, health: %f"), DamageToApply, Shield, Health);
+	if (!GetWorldTimerManager().IsTimerActive(StuneTimerHandler)) {
+		GetWorldTimerManager().SetTimer(StuneTimerHandler, this, &AShooterCharacter::IsInStuneTime, StuneTimer, false);
+	}
+	else {
+		GetWorldTimerManager().ClearTimer(StuneTimerHandler);
+		GetWorldTimerManager().SetTimer(StuneTimerHandler, this, &AShooterCharacter::IsInStuneTime, StuneTimer, false);
+	}
+	bIsStune = true;
 
 	if (Shield > 0) {
 		DamageToApply = DamageToApply / 2;
@@ -127,6 +141,14 @@ bool AShooterCharacter::IsDead() const {
 	return Health == 0;
 }
 
+float AShooterCharacter::GetCurrentHealth() const {
+	return Health;
+}
+
+void AShooterCharacter::SetCurrentHealth(float value){
+	Health = value;
+}
+
 AGun* AShooterCharacter::GetCurrentGun() {
 	return Gun;
 }
@@ -149,17 +171,29 @@ void AShooterCharacter::Shoot() {
 }
 
 void AShooterCharacter::MoveForward(float AxisValue) {
-	AddMovementInput(GetActorForwardVector() * AxisValue);
+	FVector MovementForward = GetActorForwardVector() * AxisValue;
+	AddMovementInput(CurrentMovementCalc(MovementForward));
 }
 
 void AShooterCharacter::MoveRight(float AxisValue) {
-	AddMovementInput(GetActorRightVector() * AxisValue);
+	FVector MovementRight = GetActorRightVector() * AxisValue;
+	AddMovementInput(CurrentMovementCalc(MovementRight));
 }
 
 void AShooterCharacter::LookUpRate(float AxisValue) {
-	AddControllerPitchInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
+	float LookUpRate = AxisValue * RotationRate * GetWorld()->GetDeltaSeconds();
+	AddControllerPitchInput(CurrentMovementCalc(LookUpRate));
 }
 
 void AShooterCharacter::LookRightRate(float AxisValue) {
-	AddControllerYawInput(AxisValue * RotationRate * GetWorld()->GetDeltaSeconds());
+	float LookRightRate = AxisValue * RotationRate * GetWorld()->GetDeltaSeconds();
+	AddControllerYawInput(CurrentMovementCalc(LookRightRate));
+}
+
+float AShooterCharacter::CurrentMovementCalc(float RateValue) {
+	return bIsStune ? RateValue / 4 : RateValue;
+}
+
+FVector AShooterCharacter::CurrentMovementCalc(FVector RateValue) {
+	return bIsStune ? RateValue / 4 : RateValue;
 }

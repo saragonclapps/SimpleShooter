@@ -59,7 +59,5 @@ private:
 
 	bool GunTrace(FHitResult& Hit, FVector& ShotDirection);
 
-	FCollisionQueryParams ParamsIgnore;
-
 	AController* GetOwnerController() const;
 };

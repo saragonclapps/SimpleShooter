@@ -27,17 +27,8 @@ AGun::AGun() {
 // Called when the game starts or when spawned
 void AGun::BeginPlay() {
 	Super::BeginPlay();
-
-	ParamsIgnore.AddIgnoredActor(this);
-	ParamsIgnore.AddIgnoredActor(GetOwner());
-
 	//TArray<AActor*> FoundTriggerTutorials;
 	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATriggerTutorial::StaticClass(), OUT FoundTriggerTutorials);
-
-	for (ATriggerTutorial* TriggerTutorial : TActorRange<ATriggerTutorial>(GetWorld())) {
-		//ATriggerVolume* TriggerVolume = Cast<ATriggerVolume>(TriggerTutorial->GetComponentByClass(ATriggerVolume::StaticClass()));
-		ParamsIgnore.AddIgnoredActor(TriggerTutorial);
-	}
 }
 
 void AGun::PullTrigger() {
@@ -94,6 +85,10 @@ bool AGun::GunTrace(FHitResult& Hit, FVector& ShotDirection)
 	ShotDirection = -Rotation.Vector();
 
 	FVector End = Location + Rotation.Vector() * MaxRange;
+	FCollisionQueryParams ParamsIgnore;
+
+	ParamsIgnore.AddIgnoredActor(this);
+	ParamsIgnore.AddIgnoredActor(GetOwner());
 
 	return GetWorld()->LineTraceSingleByChannel(Hit, Location, End, ECollisionChannel::ECC_GameTraceChannel1, ParamsIgnore);
 }
