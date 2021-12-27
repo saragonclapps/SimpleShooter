@@ -8,6 +8,9 @@
 
 # Initial material from training
 Content/ModularLostRuinKit
+Content/AssetPacks/GameDevTV
+Content/AssetPacks/ModularSciFiSeason1
+Content/AssetPacks/ParagonWraith
 
 # Visual Studio
 *.VC.db
